@@ -6,4 +6,5 @@ export const InputOptions = [
   "Radio",
   "Checkbox",
   "Select",
+  'File'
 ];

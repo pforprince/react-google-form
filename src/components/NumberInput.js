@@ -8,7 +8,8 @@ const NumberInput = ({ data, onChange }) => {
     <div>
       <TextField
         value={value}
-        onChange={(e) => onChange(e.target.value, e.target.value != null)}
+        onChange={(e) => {
+          onChange(e.target.value, e.target.value != "")}}
         fullWidth
         type="number"
         sx={{ my: 1 }}
@@ -16,7 +17,7 @@ const NumberInput = ({ data, onChange }) => {
         placeholder={`Enter ${label}`}
       />
       {isTouched && !isValid && (
-        <FormHelperText error>{label} is required and should be valid</FormHelperText>
+        <FormHelperText error>{label} is required</FormHelperText>
       )}{" "}
     </div>
   );

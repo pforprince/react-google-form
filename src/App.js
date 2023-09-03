@@ -1,16 +1,12 @@
-import React, { Component, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
-import {
-  Button,
-  Paper,
-  TextField,
-  MenuItem,
-  Grid,
-  Typography,
-  Box,
-} from "@mui/material";
+import { Paper, TextField, MenuItem, Grid, Typography, Box, ButtonGroup, Divider} from "@mui/material";
 import { InputOptions } from "./shared/Utils";
 import InputHander from "./components/InputHandler";
+import ViewForm from "./components/ViewForm";
+import { loadTemplates, saveTemplate } from "./shared/templateService";
+import ContainedButton from "./components/ContainedButton";
+import OutlinedButton from "./components/OutlinedButton";
 
 const App = () => {
   const [newLabel, setNewLabel] = useState("");
@@ -18,6 +14,22 @@ const App = () => {
   const [inputs, setInputs] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [option, setOption] = useState("");
+  const [formName, setFormName] = useState("");
+  const [formsArray, setFormsArray] = useState([]);
+  const [selectedForm, setSelectedForm] = useState({});
+
+  var loadTemplatesHandler = () => {
+    var array = loadTemplates();
+    setFormsArray(array);
+  };
+
+  useEffect(() => {
+    loadTemplatesHandler();
+  }, []);
+
+  useEffect(() => {
+    setInputs(selectedForm.inputs || []);
+  }, [selectedForm]);
 
   const addInput = () => {
     setInputs((prev) => [
@@ -28,7 +40,7 @@ const App = () => {
         data: option,
         isTouched: false,
         value: newInput == "Checkbox" ? false : "",
-        isValid: false,
+        isValid: newInput == "Checkbox" ? true : false,
       },
     ]);
 
@@ -42,20 +54,56 @@ const App = () => {
   };
 
   const handleSubmit = () => {
-
-    // todo
-    // setInputs((input) => input.map((i) => ({ ...i, isTouched: true })));
     setIsSubmitted(true);
+    loadTemplatesHandler();
+  };
+
+  const handleTemplateSave = () => {
+    saveTemplate(inputs, formName);
   };
 
   return (
     <div className="app">
       <Paper elevation={2} sx={{ p: 2 }} className="paper">
-        <Typography textAlign="center" sx={{ my: 2 }} variant="h5">
-          Prince Bansal Form Generator
-        </Typography>
+        <Box sx={{ display: "flex" }}>
+          <Grid container>
+            <Grid item md={6}>
+              <Typography textAlign="center" sx={{ my: 2 }} variant="h5">
+                Prince Bansal Form Generator
+              </Typography>
+            </Grid>
+            <Grid item md={6}>
+              <TextField
+                fullWidth
+                value={selectedForm}
+                required
+                onChange={(e) => setSelectedForm(e.target.value)}
+                select
+                label="Load Form"
+              >
+                {formsArray.map((option, index) => (
+                  <MenuItem value={option} key={index}>
+                    {option.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+          </Grid>
+        </Box>
+        <Divider sx={{ my: 2 }} />
         <Grid container spacing={3}>
           <Grid item md={6}>
+            <Typography variant="h4" textAlign={"center"}>
+              Form Generator
+            </Typography>
+            <TextField
+              onChange={(e) => setFormName(e.target.value)}
+              value={formName}
+              required
+              sx={{ my: 1 }}
+              label="Form Name"
+              fullWidth
+            />
             <Box sx={{ my: 1 }}>
               <TextField
                 fullWidth
@@ -87,20 +135,32 @@ const App = () => {
                 value={option}
                 label="Values by comma separated"
                 sx={{ my: 1 }}
+                required
                 fullWidth
               />
             )}
-            <Button
-              onClick={addInput}
-              variant="contained"
-              sx={{ my: 2 }}
-              fullWidth
-              disabled={!(newInput && newLabel)}
-            >
-              Add
-            </Button>
+            <ButtonGroup fullWidth>
+              <ContainedButton
+                text={"Add"}
+                onClick={addInput}
+                disabled={
+                  !(newInput && newLabel) ||
+                  (["Select", "Radio"].includes(newInput) && !option)
+                }
+              />
+              <OutlinedButton
+                disabled={!(inputs?.length > 0 && formName)}
+                onClick={() => handleTemplateSave()}
+                text="Save Template"
+              />
+            </ButtonGroup>
           </Grid>
           <Grid item md={6}>
+            {inputs?.length > 0 && (
+              <Typography variant="h4" textAlign={"center"}>
+                User Preview
+              </Typography>
+            )}
             {inputs.map((input, index) => (
               <Grid
                 spacing={3}
@@ -121,45 +181,21 @@ const App = () => {
                   />
                 </Grid>
                 <Grid item md={2}>
-                  <Button
-                    onClick={() => removeInput(index)}
-                    variant="outlined"
-                    color="error"
-                  >
-                    -
-                  </Button>
+                  <OutlinedButton onClick={() => removeInput(index)} text="-" />
                 </Grid>
               </Grid>
             ))}
             {inputs.length > 0 && (
-              <Button
+              <ContainedButton
+                text="Submit"
                 onClick={handleSubmit}
-                sx={{ my: 2 }}
-                variant="contained"
-                fullWidth
                 disabled={!inputs.every((v) => v.isValid == true)}
-              >
-                Submit
-              </Button>
+              />
             )}
           </Grid>
         </Grid>
       </Paper>
-      {isSubmitted && (
-        <Paper className="paper" sx={{ p: 2, my: 2 }} elevation={2}>
-          <Typography textAlign="center" sx={{ my: 2 }} variant="h5">
-            Values:
-          </Typography>
-          {inputs.map((i, index) => {
-            return (
-              <Box key={index} sx={{ display: "flex" }}>
-                <Typography>{i.label}:</Typography>
-                <Typography sx={{ ml: 1 }}>{`${i.value}`}</Typography>
-              </Box>
-            );
-          })}
-        </Paper>
-      )}
+      {isSubmitted && inputs?.length > 0 && <ViewForm inputs={inputs} />}
     </div>
   );
 };
