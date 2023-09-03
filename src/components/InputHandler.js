@@ -6,7 +6,6 @@ import TextAreaInput from "./TextAreaInput";
 import TextInput from "./TextInput";
 import SelectInput from "./SelectInput";
 import CheckInput from "./CheckInput";
-import FileInput from "./FileInput";
 
 const InputHander = ({ setValue, index, input }) => {
   const setValueHandler = (val, valid = true) => {
@@ -30,8 +29,6 @@ const InputHander = ({ setValue, index, input }) => {
       return <TextAreaInput data={input} onChange={setValueHandler} />;
     case "Checkbox":
       return <CheckInput data={input} onChange={setValueHandler} />;
-    case "File":
-      return <FileInput data={input} onChange={setValueHandler} />;
     default:
       return <TextInput data={input} onChange={setValueHandler} />;
   }
